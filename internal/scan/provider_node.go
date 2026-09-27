@@ -28,7 +28,7 @@ func (p *NodeProvider) Scan(ctx context.Context, env *Env, emit func(*Target)) {
 			Category: "包缓存", Title: "npm 缓存 (_cacache)",
 			Path: npmCache, AllowedRoot: npmdir,
 			Description: "npm 下载缓存,删除后安装依赖需重新联网下载 (等效 npm cache clean --force)",
-			Risk: RiskSafe, Size: size, Count: files,
+			Risk:        RiskSafe, Size: size, Count: files,
 			Method: MethodDir, Available: true,
 		})
 	}
@@ -41,7 +41,7 @@ func (p *NodeProvider) Scan(ctx context.Context, env *Env, emit func(*Target)) {
 			Category: "包缓存", Title: "pnpm 内容寻址存储 (store)",
 			Path: pnpmStore, AllowedRoot: parentOf(pnpmStore),
 			Description: "pnpm 全局包存储,删除后所有项目需重新安装依赖 (等效 pnpm store prune 的加强版)",
-			Risk: RiskCaution, Size: size, Count: files,
+			Risk:        RiskCaution, Size: size, Count: files,
 			Method: MethodDir, Available: true,
 		})
 	}
@@ -57,7 +57,7 @@ func (p *NodeProvider) Scan(ctx context.Context, env *Env, emit func(*Target)) {
 			Category: "包缓存", Title: "Yarn 缓存",
 			Path: yarn, AllowedRoot: env.CacheDir,
 			Description: "Yarn 包缓存,删除后安装需重新下载 (等效 yarn cache clean)",
-			Risk: RiskSafe, Size: size, Count: files,
+			Risk:        RiskSafe, Size: size, Count: files,
 			Method: MethodDir, Available: true,
 		})
 	}
@@ -73,7 +73,7 @@ func (p *NodeProvider) Scan(ctx context.Context, env *Env, emit func(*Target)) {
 			Category: "头文件缓存", Title: "node-gyp 编译头文件",
 			Path: gyp, AllowedRoot: parentOf(gyp),
 			Description: "原生模块编译所需的 Node 头文件,删除后下次编译自动重新下载",
-			Risk: RiskSafe, Size: size, Count: files,
+			Risk:        RiskSafe, Size: size, Count: files,
 			Method: MethodDir, Available: true,
 		})
 	}

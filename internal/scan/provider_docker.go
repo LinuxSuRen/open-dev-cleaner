@@ -74,7 +74,7 @@ func (p *DockerProvider) Scan(ctx context.Context, env *Env, emit func(*Target))
 			Risk: RiskCaution, Size: danglingSize,
 			Method: MethodCommand, Cmd: []string{"docker", "image", "prune", "-f"},
 			Available: true,
-			Items: imageChildren(ctx, tool, title, dangling),
+			Items:     imageChildren(ctx, tool, title, dangling),
 		})
 	}
 
@@ -93,10 +93,10 @@ func (p *DockerProvider) Scan(ctx context.Context, env *Env, emit func(*Target))
 			ID: tool + ":images-unused", Tool: tool, ToolTitle: title,
 			Category: "镜像", Title: fmt.Sprintf("未被容器使用的镜像 (%d 个)", len(unused)),
 			Description: "当前没有任何容器引用的镜像 (等效 docker image prune -a),删除后需重新拉取/构建",
-			Risk: RiskHigh, Size: unusedSize,
+			Risk:        RiskHigh, Size: unusedSize,
 			Method: MethodCommand, Cmd: []string{"docker", "image", "prune", "-a", "-f"},
 			Available: true,
-			Items: imageChildren(ctx, tool, title, unused),
+			Items:     imageChildren(ctx, tool, title, unused),
 		})
 	}
 
@@ -108,8 +108,8 @@ func (p *DockerProvider) Scan(ctx context.Context, env *Env, emit func(*Target))
 				ID: tool + ":containers", Tool: tool, ToolTitle: title,
 				Category: "容器", Title: fmt.Sprintf("已停止的容器 (%d 个)", n),
 				Description: "退出/创建失败的容器及其可写层 (等效 docker container prune),数据卷不会被删除",
-				Risk: RiskCaution,
-				Method:  MethodCommand, Cmd: []string{"docker", "container", "prune", "-f"},
+				Risk:        RiskCaution,
+				Method:      MethodCommand, Cmd: []string{"docker", "container", "prune", "-f"},
 				Available: true,
 			})
 		}
@@ -125,7 +125,7 @@ func (p *DockerProvider) Scan(ctx context.Context, env *Env, emit func(*Target))
 				ID: tool + ":build-cache", Tool: tool, ToolTitle: title,
 				Category: "构建缓存", Title: fmt.Sprintf("镜像构建缓存 (%d 项)", row.TotalCount),
 				Description: "buildx/buildkit 的中间层缓存 (等效 docker builder prune),删除后构建变慢",
-				Risk: RiskCaution, Size: reclaimableBytes(row),
+				Risk:        RiskCaution, Size: reclaimableBytes(row),
 				Method: MethodCommand, Cmd: []string{"docker", "builder", "prune", "-f"},
 				Available: true,
 			})
@@ -139,7 +139,7 @@ func (p *DockerProvider) Scan(ctx context.Context, env *Env, emit func(*Target))
 				ID: tool + ":volumes", Tool: tool, ToolTitle: title,
 				Category: "数据卷", Title: fmt.Sprintf("未被容器使用的数据卷 (%d 个)", unused),
 				Description: "数据库、上传文件等持久化数据通常在卷里,删除后不可恢复 (等效 docker volume prune)",
-				Risk: RiskDangerous, Size: reclaimableBytes(row),
+				Risk:        RiskDangerous, Size: reclaimableBytes(row),
 				Method: MethodCommand, Cmd: []string{"docker", "volume", "prune", "-f"},
 				Available: true,
 			})
@@ -202,13 +202,13 @@ func imageChildren(ctx context.Context, tool, title string, imgs []dockerImage) 
 		}
 		id := img.ID
 		children = append(children, &Target{
-			ID: tool + ":image:" + strings.TrimPrefix(id, "sha256:"),
+			ID:   tool + ":image:" + strings.TrimPrefix(id, "sha256:"),
 			Tool: tool, ToolTitle: title, Category: "镜像",
 			Title: name, Description: "镜像 " + name,
 			Risk: RiskHigh, Size: ParseSize(img.Size),
 			Method: MethodCommand, Cmd: []string{"docker", "image", "rm", "-f", id},
 			Available: true,
-			Meta: map[string]string{"id": id},
+			Meta:      map[string]string{"id": id},
 		})
 	}
 	return children

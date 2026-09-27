@@ -31,7 +31,7 @@ func (p *VersionsProvider) Scan(ctx context.Context, env *Env, emit func(*Target
 			Category: "工具链", Title: "Node.js 版本 (nvm)",
 			Path: nvmVersions, AllowedRoot: nvmVersions,
 			Description: "nvm 安装的各个 Node.js 版本,可删除不再使用的版本;默认版本: " + current,
-			Risk: RiskHigh, Method: MethodGroup, Available: true,
+			Risk:        RiskHigh, Method: MethodGroup, Available: true,
 		}
 		for _, v := range listDirs(nvmVersions) {
 			size, files := DirSize(ctx, v)
@@ -50,7 +50,7 @@ func (p *VersionsProvider) Scan(ctx context.Context, env *Env, emit func(*Target
 				Category: "工具链", Title: "Node.js " + filepath.Base(v),
 				Path: v, AllowedRoot: nvmVersions,
 				Description: "最后修改: " + lastActivityDesc(v),
-				Risk: RiskHigh, Size: size, Count: files,
+				Risk:        RiskHigh, Size: size, Count: files,
 				Method: MethodDir, Available: true, Note: note,
 			})
 		}
@@ -64,7 +64,7 @@ func (p *VersionsProvider) Scan(ctx context.Context, env *Env, emit func(*Target
 				Category: "包缓存", Title: "nvm 下载缓存",
 				Path: nvmCache, AllowedRoot: filepath.Join(env.Home, ".nvm"),
 				Description: "已下载的 Node.js 发行版压缩包,删除后需要时重新下载",
-				Risk: RiskSafe, Size: size, Count: files,
+				Risk:        RiskSafe, Size: size, Count: files,
 				Method: MethodDir, Available: true,
 			})
 		}
@@ -79,7 +79,7 @@ func (p *VersionsProvider) Scan(ctx context.Context, env *Env, emit func(*Target
 			Category: "工具链", Title: "SDK 版本 (sdkman)",
 			Path: cands, AllowedRoot: cands,
 			Description: "sdkman 安装的各 SDK 版本(java、gradle 等),current 指向的版本已标注",
-			Risk: RiskHigh, Method: MethodGroup, Available: true,
+			Risk:        RiskHigh, Method: MethodGroup, Available: true,
 		}
 		if entries, err := os.ReadDir(cands); err == nil {
 			for _, cand := range entries {
@@ -107,7 +107,7 @@ func (p *VersionsProvider) Scan(ctx context.Context, env *Env, emit func(*Target
 						Category: "工具链", Title: cand.Name() + " " + base,
 						Path: v, AllowedRoot: cands,
 						Description: "最后修改: " + lastActivityDesc(v),
-						Risk: RiskHigh, Size: size, Count: files,
+						Risk:        RiskHigh, Size: size, Count: files,
 						Method: MethodDir, Available: true, Note: note,
 					})
 				}
@@ -124,7 +124,7 @@ func (p *VersionsProvider) Scan(ctx context.Context, env *Env, emit func(*Target
 				Category: "临时文件", Title: "sdkman 下载临时目录 (tmp)",
 				Path: tmp, AllowedRoot: sdkman,
 				Description: "安装/升级过程残留的下载文件,可安全清空",
-				Risk: RiskSafe, Size: size, Count: files,
+				Risk:        RiskSafe, Size: size, Count: files,
 				Method: MethodDir, Available: true,
 			})
 		}
@@ -135,7 +135,7 @@ func (p *VersionsProvider) Scan(ctx context.Context, env *Env, emit func(*Target
 				Category: "包缓存", Title: "sdkman 发行版缓存 (archives)",
 				Path: archives, AllowedRoot: sdkman,
 				Description: "已下载的 SDK 压缩包,删除后需要时重新下载",
-				Risk: RiskSafe, Size: size, Count: files,
+				Risk:        RiskSafe, Size: size, Count: files,
 				Method: MethodDir, Available: true,
 			})
 		}
@@ -150,7 +150,7 @@ func (p *VersionsProvider) Scan(ctx context.Context, env *Env, emit func(*Target
 			Category: "工具链", Title: "Python 版本 (pyenv)",
 			Path: pyenvVersions, AllowedRoot: pyenvVersions,
 			Description: "pyenv 安装的 Python 版本;全局版本: " + current,
-			Risk: RiskHigh, Method: MethodGroup, Available: true,
+			Risk:        RiskHigh, Method: MethodGroup, Available: true,
 		}
 		for _, v := range listDirs(pyenvVersions) {
 			size, files := DirSize(ctx, v)
@@ -169,7 +169,7 @@ func (p *VersionsProvider) Scan(ctx context.Context, env *Env, emit func(*Target
 				Category: "工具链", Title: "Python " + base,
 				Path: v, AllowedRoot: pyenvVersions,
 				Description: "最后修改: " + lastActivityDesc(v),
-				Risk: RiskHigh, Size: size, Count: files,
+				Risk:        RiskHigh, Size: size, Count: files,
 				Method: MethodDir, Available: true, Note: note,
 			})
 		}
@@ -184,7 +184,7 @@ func (p *VersionsProvider) Scan(ctx context.Context, env *Env, emit func(*Target
 			Category: "工具链", Title: "Go 多版本 (~/sdk)",
 			Path: sdkDir, AllowedRoot: sdkDir,
 			Description: "通过 golang.org/dl 安装的额外 Go 工具链",
-			Risk: RiskHigh, Method: MethodGroup, Available: true,
+			Risk:        RiskHigh, Method: MethodGroup, Available: true,
 		}
 		for _, v := range listDirs(sdkDir) {
 			base := filepath.Base(v)
@@ -204,7 +204,7 @@ func (p *VersionsProvider) Scan(ctx context.Context, env *Env, emit func(*Target
 				Category: "工具链", Title: "Go " + base,
 				Path: v, AllowedRoot: sdkDir,
 				Description: "最后修改: " + lastActivityDesc(v),
-				Risk: RiskHigh, Size: size, Count: files,
+				Risk:        RiskHigh, Size: size, Count: files,
 				Method: MethodDir, Available: true, Note: note,
 			})
 		}

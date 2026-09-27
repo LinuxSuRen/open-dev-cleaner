@@ -10,8 +10,8 @@ import (
 // GoProvider scans Go build/module caches.
 type GoProvider struct{}
 
-func (p *GoProvider) Key() string    { return "go" }
-func (p *GoProvider) Title() string  { return "Go" }
+func (p *GoProvider) Key() string   { return "go" }
+func (p *GoProvider) Title() string { return "Go" }
 
 func (p *GoProvider) Scan(ctx context.Context, env *Env, emit func(*Target)) {
 	tool := p.Key()
@@ -25,7 +25,7 @@ func (p *GoProvider) Scan(ctx context.Context, env *Env, emit func(*Target)) {
 			Category: "构建缓存", Title: "Go 构建缓存 (GOCACHE)",
 			Path: cachePath, AllowedRoot: env.CacheDir,
 			Description: "go build 的中间编译产物,删除后首次编译会稍慢,无需联网",
-			Risk: RiskSafe, Size: size, Count: files,
+			Risk:        RiskSafe, Size: size, Count: files,
 			Method: MethodDir, Available: true,
 		})
 	}
@@ -43,7 +43,7 @@ func (p *GoProvider) Scan(ctx context.Context, env *Env, emit func(*Target)) {
 			Category: "包缓存", Title: "Go 模块缓存 (GOMODCACHE)",
 			Path: modCache, AllowedRoot: parentOf(modCache),
 			Description: "已下载的依赖源码,删除后构建需要重新联网下载 (等效 go clean -modcache)",
-			Risk: RiskCaution, Size: size, Count: files,
+			Risk:        RiskCaution, Size: size, Count: files,
 			Method: MethodDir, Available: true,
 		})
 	}
@@ -59,7 +59,7 @@ func (p *GoProvider) Scan(ctx context.Context, env *Env, emit func(*Target)) {
 				Category: "索引缓存", Title: name + " 索引缓存",
 				Path: p, AllowedRoot: env.CacheDir,
 				Description: "代码补全/导入工具的索引缓存,删除后自动重建",
-				Risk: RiskSafe, Size: size, Count: files,
+				Risk:        RiskSafe, Size: size, Count: files,
 				Method: MethodDir, Available: true,
 			})
 		}

@@ -14,10 +14,10 @@ func (p *EditorProvider) Key() string   { return "editor" }
 func (p *EditorProvider) Title() string { return "编辑器" }
 
 type editorApp struct {
-	key   string
-	name  string
-	base  string // app support dir
-	ext   string // extensions dir (optional)
+	key  string
+	name string
+	base string // app support dir
+	ext  string // extensions dir (optional)
 }
 
 func (p *EditorProvider) Scan(ctx context.Context, env *Env, emit func(*Target)) {
@@ -54,9 +54,9 @@ func (p *EditorProvider) Scan(ctx context.Context, env *Env, emit func(*Target))
 		group := &Target{
 			ID: tool + ":" + app.key, Tool: tool, ToolTitle: title,
 			Category: "IDE 缓存", Title: app.name,
-			Path: app.base,
+			Path:        app.base,
 			Description: app.name + " 的缓存/索引/日志(设置、登录状态与工作区数据不受影响)",
-			Risk: RiskSafe, Method: MethodGroup, Available: true,
+			Risk:        RiskSafe, Method: MethodGroup, Available: true,
 		}
 		any := false
 
@@ -87,7 +87,7 @@ func (p *EditorProvider) Scan(ctx context.Context, env *Env, emit func(*Target))
 					Category: "扩展", Title: app.name + " 扩展目录",
 					Path: app.ext, AllowedRoot: filepath.Dir(app.ext),
 					Description: "已安装的编辑器扩展,删除后需重新安装(配置与快捷键保留)",
-					Risk: RiskCaution, Size: size, Count: files,
+					Risk:        RiskCaution, Size: size, Count: files,
 					Method: MethodDir, Available: true,
 				})
 				group.Risk = RiskCaution
@@ -113,7 +113,7 @@ func (p *EditorProvider) Scan(ctx context.Context, env *Env, emit func(*Target))
 			Category: "IDE 缓存", Title: "JetBrains 系 IDE 缓存(按 IDE 细分)",
 			Path: jetbrainsRoot, AllowedRoot: env.CacheDir,
 			Description: "IntelliJ IDEA / PyCharm / GoLand / WebStorm / Rider / Fleet 等各 IDE 的索引与缓存,删除后重新打开项目时重建索引(耗时);长期未用的 IDE 会单独标注",
-			Risk: RiskCaution, Method: MethodGroup, Available: true,
+			Risk:        RiskCaution, Method: MethodGroup, Available: true,
 		}
 		for _, p := range products {
 			size, files := DirSize(ctx, p)
@@ -129,7 +129,7 @@ func (p *EditorProvider) Scan(ctx context.Context, env *Env, emit func(*Target))
 				Category: "IDE 缓存", Title: filepath.Base(p),
 				Path: p, AllowedRoot: jetbrainsRoot,
 				Description: "该 IDE 的索引、缓存与本地历史,删除后重建",
-				Risk: RiskCaution, Size: size, Count: files,
+				Risk:        RiskCaution, Size: size, Count: files,
 				Method: MethodDir, Available: true, Note: note,
 			})
 		}
@@ -148,7 +148,7 @@ func (p *EditorProvider) Scan(ctx context.Context, env *Env, emit func(*Target))
 				Category: "日志", Title: "JetBrains 系 IDE 日志",
 				Path: jbLogs, AllowedRoot: filepath.Dir(jbLogs),
 				Description: "各 IDE 的运行日志(idea.log 等),可安全删除",
-				Risk: RiskSafe, Size: size, Count: files,
+				Risk:        RiskSafe, Size: size, Count: files,
 				Method: MethodDir, Available: true,
 			})
 		}
@@ -170,7 +170,7 @@ func (p *EditorProvider) Scan(ctx context.Context, env *Env, emit func(*Target))
 			Category: "IDE 缓存", Title: "Android Studio 缓存 (" + filepath.Base(p) + ")",
 			Path: p, AllowedRoot: filepath.Dir(p),
 			Description: "Android Studio 的索引与构建缓存,删除后重新打开项目时重建",
-			Risk: RiskCaution, Size: size, Count: files,
+			Risk:        RiskCaution, Size: size, Count: files,
 			Method: MethodDir, Available: true, Note: note,
 		})
 	}
@@ -180,10 +180,10 @@ func (p *EditorProvider) Scan(ctx context.Context, env *Env, emit func(*Target))
 		emit(&Target{
 			ID: tool + ":android-build-cache", Tool: tool, ToolTitle: title,
 			Category: "构建缓存", Title: "Android 构建缓存 (~/.android/build-cache)",
-			Path: filepath.Join(env.Home, ".android", "build-cache"),
+			Path:        filepath.Join(env.Home, ".android", "build-cache"),
 			AllowedRoot: filepath.Join(env.Home, ".android"),
 			Description: "Android Gradle 插件的构建缓存,删除后自动重建(AVD 虚拟设备不受影响)",
-			Risk: RiskSafe, Size: size, Count: files,
+			Risk:        RiskSafe, Size: size, Count: files,
 			Method: MethodDir, Available: true,
 		})
 	}
@@ -196,7 +196,7 @@ func (p *EditorProvider) Scan(ctx context.Context, env *Env, emit func(*Target))
 			Category: "包缓存", Title: "Eclipse p2 下载缓存",
 			Path: p2Cache, AllowedRoot: filepath.Dir(filepath.Dir(p2Cache)),
 			Description: "p2 配置器下载缓存,删除后需要时重新下载",
-			Risk: RiskSafe, Size: size, Count: files,
+			Risk:        RiskSafe, Size: size, Count: files,
 			Method: MethodDir, Available: true,
 		})
 	}
@@ -211,7 +211,7 @@ func (p *EditorProvider) Scan(ctx context.Context, env *Env, emit func(*Target))
 			Category: "工具数据", Title: "Eclipse p2 共享组件池 (~/.p2)",
 			Path: p2Pool, AllowedRoot: env.Home,
 			Description: "Eclipse 安装器共享的插件/组件池,删除后相关 Eclipse 安装需重新安装组件;不再使用 Eclipse 时可整体删除",
-			Risk: RiskHigh, Size: size, Count: files,
+			Risk:        RiskHigh, Size: size, Count: files,
 			Method: MethodDir, Available: true, Note: note,
 		})
 	}
@@ -221,7 +221,7 @@ func (p *EditorProvider) Scan(ctx context.Context, env *Env, emit func(*Target))
 			Category: "工具数据", Title: "Eclipse 用户数据 (~/.eclipse)",
 			Path: filepath.Join(env.Home, ".eclipse"), AllowedRoot: env.Home,
 			Description: "Eclipse 的用户级配置与缓存数据",
-			Risk: RiskCaution, Size: size, Count: files,
+			Risk:        RiskCaution, Size: size, Count: files,
 			Method: MethodDir, Available: true,
 		})
 	}
@@ -237,7 +237,7 @@ func (p *EditorProvider) Scan(ctx context.Context, env *Env, emit func(*Target))
 				Category: "远程开发", Title: filepath.Base(d) + " (远程开发)",
 				Path: d, AllowedRoot: env.Home,
 				Description: "SSH 远程开发时安装的服务端与扩展,删除后下次连接自动重装",
-				Risk: RiskCaution, Size: size, Count: files,
+				Risk:        RiskCaution, Size: size, Count: files,
 				Method: MethodDir, Available: true,
 			})
 		}

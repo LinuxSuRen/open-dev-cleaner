@@ -18,13 +18,13 @@ var (
 
 // drive type constants returned by GetDriveTypeW.
 const (
-	driveUnknown    = 0
-	driveNoRoot     = 1
-	driveRemovable  = 2
-	driveFixed      = 3
-	driveRemote     = 4
-	driveCDROM      = 5
-	driveRamDisk    = 6
+	driveUnknown   = 0
+	driveNoRoot    = 1
+	driveRemovable = 2
+	driveFixed     = 3
+	driveRemote    = 4
+	driveCDROM     = 5
+	driveRamDisk   = 6
 )
 
 // ListVolumes enumerates all drive letters via GetLogicalDrives and fills
@@ -65,12 +65,12 @@ func ListVolumes() []DiskVolume {
 		}
 
 		v := DiskVolume{
-			Path: root,
-			Kind: driveKind(dt),
+			Path:   root,
+			Kind:   driveKind(dt),
 			Device: `\\.\` + string(letter) + ":",
-			Total: int64(total),
-			Free:  int64(freeAvail),
-			Used:  int64(total - freeAvail),
+			Total:  int64(total),
+			Free:   int64(freeAvail),
+			Used:   int64(total - freeAvail),
 		}
 		v.Label, v.FSType = volumeInfo(rootUTF16)
 		vols = append(vols, v)

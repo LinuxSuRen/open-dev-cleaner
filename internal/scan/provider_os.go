@@ -71,7 +71,7 @@ func (p *BrowserProvider) Scan(ctx context.Context, env *Env, emit func(*Target)
 			Category: "浏览器缓存", Title: bt.name + " 缓存",
 			Path: bt.path, AllowedRoot: env.CacheDir,
 			Description: "网页资源缓存,请先关闭对应浏览器再清理;书签/密码/历史记录不受影响",
-			Risk: RiskCaution, Size: size, Count: files,
+			Risk:        RiskCaution, Size: size, Count: files,
 			Method: MethodDir, Available: true,
 		})
 	}
@@ -100,7 +100,7 @@ func (p *OSProvider) Scan(ctx context.Context, env *Env, emit func(*Target)) {
 				Category: "包缓存", Title: "Homebrew 下载缓存",
 				Path: cacheDir, AllowedRoot: env.CacheDir,
 				Description: "brew 下载的 bottle 压缩包 (等效 brew cleanup --cache)",
-				Risk: RiskSafe, Size: size, Count: files,
+				Risk:        RiskSafe, Size: size, Count: files,
 				Method: MethodDir, Available: true,
 			})
 		}
@@ -109,7 +109,7 @@ func (p *OSProvider) Scan(ctx context.Context, env *Env, emit func(*Target)) {
 				ID: tool + ":brew-cleanup", Tool: tool, ToolTitle: title,
 				Category: "旧版本", Title: "Homebrew 旧版本清理",
 				Description: "已安装软件的旧版本与死链 (等效 brew cleanup --prune=all)",
-				Risk: RiskCaution, Size: est,
+				Risk:        RiskCaution, Size: est,
 				Method: MethodCommand, Cmd: []string{"brew", "cleanup", "--prune=all"},
 				Available: true,
 			}
@@ -122,7 +122,11 @@ func (p *OSProvider) Scan(ctx context.Context, env *Env, emit func(*Target)) {
 
 	// --- Xcode (macOS only) ---
 	if env.GOOS == "darwin" {
-		xcode := []struct{ id, name, path string; risk RiskLevel; desc string }{
+		xcode := []struct {
+			id, name, path string
+			risk           RiskLevel
+			desc           string
+		}{
 			{"xcode-derived", "Xcode DerivedData",
 				filepath.Join(env.Home, "Library", "Developer", "Xcode", "DerivedData"), RiskCaution,
 				"Xcode 构建的中间产物与索引,删除后下次构建重新生成"},
@@ -154,7 +158,7 @@ func (p *OSProvider) Scan(ctx context.Context, env *Env, emit func(*Target)) {
 			Category: "临时文件", Title: "系统临时目录 (" + tmp + ")",
 			Path: tmp, AllowedRoot: filepath.Dir(tmp),
 			Description: "临时文件,保留目录本身仅清空内容;被占用的文件会自动跳过",
-			Risk: RiskCaution, Size: size, Count: files,
+			Risk:        RiskCaution, Size: size, Count: files,
 			Method: MethodDirContents, Available: true,
 		})
 	}

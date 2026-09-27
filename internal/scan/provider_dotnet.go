@@ -23,7 +23,7 @@ func (p *DotNetProvider) Scan(ctx context.Context, env *Env, emit func(*Target))
 			Category: "包缓存", Title: "NuGet 全局包 (~/.nuget/packages)",
 			Path: pkgs, AllowedRoot: filepath.Dir(pkgs),
 			Description: "所有 .NET 项目还原的包,删除后构建时自动重新还原 (等效 dotnet nuget locals global-packages --clear)",
-			Risk: RiskCaution, Size: size, Count: files,
+			Risk:        RiskCaution, Size: size, Count: files,
 			Method: MethodDir, Available: true,
 		})
 	}
@@ -46,7 +46,7 @@ func (p *DotNetProvider) Scan(ctx context.Context, env *Env, emit func(*Target))
 			Category: "包缓存", Title: "NuGet HTTP 下载缓存",
 			Path: httpCache, AllowedRoot: filepath.Dir(httpCache),
 			Description: "NuGet 直接下载缓存,删除后需要时重新下载 (等效 dotnet nuget locals http-cache --clear)",
-			Risk: RiskSafe, Size: size, Count: files,
+			Risk:        RiskSafe, Size: size, Count: files,
 			Method: MethodDir, Available: true,
 		})
 	}
@@ -60,12 +60,12 @@ func (p *DotNetProvider) Scan(ctx context.Context, env *Env, emit func(*Target))
 				continue
 			}
 			emit(&Target{
-				ID: tool + ":vs-component-cache:" + filepath.Base(filepath.Dir(p)),
+				ID:   tool + ":vs-component-cache:" + filepath.Base(filepath.Dir(p)),
 				Tool: tool, ToolTitle: title,
 				Category: "IDE 缓存", Title: "Visual Studio 组件缓存 (" + filepath.Base(filepath.Dir(p)) + ")",
 				Path: p, AllowedRoot: filepath.Dir(filepath.Dir(p)),
 				Description: "VS 组件模型缓存,删除后下次启动重建",
-				Risk: RiskCaution, Size: size, Count: files,
+				Risk:        RiskCaution, Size: size, Count: files,
 				Method: MethodDir, Available: true,
 			})
 		}

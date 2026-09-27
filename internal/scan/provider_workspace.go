@@ -105,7 +105,7 @@ func (p *WorkspaceProvider) Scan(ctx context.Context, env *Env, emit func(*Targe
 			ID: tool + ":" + root, Tool: tool, ToolTitle: title,
 			Category: "依赖/构建产物", Title: "项目工作区 " + root,
 			Description: fmt.Sprintf("在 %s 下发现 %d 个可清理目录(node_modules、构建产物、缓存等)", root, len(children)),
-			Risk: maxRisk, Size: total,
+			Risk:        maxRisk, Size: total,
 			Method: MethodGroup, Available: true,
 			Items: children,
 		})

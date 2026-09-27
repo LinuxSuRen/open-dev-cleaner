@@ -23,7 +23,7 @@ func (p *RustProvider) Scan(ctx context.Context, env *Env, emit func(*Target)) {
 			Category: "包缓存", Title: "Cargo registry 缓存",
 			Path: registry, AllowedRoot: cargoHome,
 			Description: "crates.io 的源码与 .crate 归档缓存,删除后构建需重新联网下载",
-			Risk: RiskCaution, Size: size, Count: files,
+			Risk:        RiskCaution, Size: size, Count: files,
 			Method: MethodDir, Available: true,
 		})
 	}
@@ -35,7 +35,7 @@ func (p *RustProvider) Scan(ctx context.Context, env *Env, emit func(*Target)) {
 			Category: "包缓存", Title: "Cargo git 依赖缓存",
 			Path: git, AllowedRoot: cargoHome,
 			Description: "git 依赖的裸仓库与检出缓存,删除后按需重新克隆",
-			Risk: RiskCaution, Size: size, Count: files,
+			Risk:        RiskCaution, Size: size, Count: files,
 			Method: MethodDir, Available: true,
 		})
 	}

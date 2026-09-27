@@ -14,10 +14,10 @@ import (
 
 // CleanResult reports the outcome of cleaning one target.
 type CleanResult struct {
-	ID     string `json:"id"`
-	Title  string `json:"title"`
-	OK     bool   `json:"ok"`
-	Freed  int64  `json:"freed"`
+	ID      string `json:"id"`
+	Title   string `json:"title"`
+	OK      bool   `json:"ok"`
+	Freed   int64  `json:"freed"`
 	Message string `json:"message"`
 }
 

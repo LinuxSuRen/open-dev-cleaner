@@ -33,7 +33,7 @@ var linuxFSWhitelist = map[string]bool{
 	"xfs": true, "btrfs": true, "zfs": true, "f2fs": true,
 	"vfat": true, "exfat": true, "ntfs": true, "ntfs3": true,
 	"apfs": true, "hfsplus": true, "ufs": true, "ffs": true,
-	"overlay": true, // WSL2 / container roots
+	"overlay":    true, // WSL2 / container roots
 	"fuse.sshfs": true, "fuseblk": true,
 	"ecryptfs": true, "ramfs": false,
 }
@@ -75,7 +75,7 @@ func decodeMountEscape(s string) string {
 	var b strings.Builder
 	for i := 0; i < len(s); {
 		if s[i] == '\\' && i+3 < len(s) {
-			if v, ok := octal3(s[i+1:i+4]); ok {
+			if v, ok := octal3(s[i+1 : i+4]); ok {
 				b.WriteByte(byte(v))
 				i += 4
 				continue

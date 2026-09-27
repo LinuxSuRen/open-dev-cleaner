@@ -118,11 +118,11 @@ type Summary struct {
 // Event is a progress notification emitted while scanning or cleaning.
 // It is serialized as JSON over SSE and reused by the CLI printer.
 type Event struct {
-	Type    string   `json:"type"` // progress | target | done | log | result | error
-	Tool    string   `json:"tool,omitempty"`
-	Message string   `json:"message,omitempty"`
-	Target  *Target  `json:"target,omitempty"`
-	Summary *Summary `json:"summary,omitempty"`
+	Type    string       `json:"type"` // progress | target | done | log | result | error
+	Tool    string       `json:"tool,omitempty"`
+	Message string       `json:"message,omitempty"`
+	Target  *Target      `json:"target,omitempty"`
+	Summary *Summary     `json:"summary,omitempty"`
 	Result  *CleanResult `json:"result,omitempty"`
 }
 

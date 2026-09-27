@@ -79,7 +79,7 @@ func TestDirSize(t *testing.T) {
 func TestParseOllamaList(t *testing.T) {
 	out := `NAME                ID          SIZE      MODIFIED
 deepseek-r1:14b     3d9f3a1b2c4d 9.0GB     3 days ago
-llama3.1:8b         42182419e950 4.9GB     2 weeks ago
+llama3.2:3b         a80c4f17acd5 2.0 GB    18 months ago
 qwen2.5-coder:1.5b  aa12bb34cc56 986MB     24 hours ago`
 	models := parseOllamaList(out)
 	if len(models) != 3 {
@@ -87,6 +87,9 @@ qwen2.5-coder:1.5b  aa12bb34cc56 986MB     24 hours ago`
 	}
 	if models[0].name != "deepseek-r1:14b" || models[0].size != 9663676416 {
 		t.Errorf("model[0] = %+v", models[0])
+	}
+	if models[1].name != "llama3.2:3b" || models[1].size != 2*1024*1024*1024 {
+		t.Errorf("spaced size format not parsed: %+v", models[1])
 	}
 	if models[2].name != "qwen2.5-coder:1.5b" || models[2].size != 986*1024*1024 {
 		t.Errorf("model[2] = %+v", models[2])

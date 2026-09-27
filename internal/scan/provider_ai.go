@@ -60,7 +60,7 @@ func (p *AIProvider) Scan(ctx context.Context, env *Env, emit func(*Target)) {
 		},
 		{
 			key: "opencode", name: "OpenCode",
-			root: filepath.Join(env.Home, ".local", "share", "opencode"),
+			root:     filepath.Join(env.Home, ".local", "share", "opencode"),
 			rootName: "~/.local/share/opencode", hasAll: true,
 			dirs: []aiDir{
 				{"log", "运行日志 (log)", "日志", "运行日志,可安全删除", RiskSafe},
@@ -174,7 +174,7 @@ func (p *AIProvider) Scan(ctx context.Context, env *Env, emit func(*Target)) {
 					Category: "工具数据", Title: "⚠ 删除 " + at.name + " 全部本地数据 (" + at.rootName + ")",
 					Path: at.root, AllowedRoot: filepath.Dir(at.root),
 					Description: "删除该工具的全部本地数据(含配置与登录状态),适合不再使用该工具时彻底清理",
-					Risk: RiskHigh, Size: size, Count: files,
+					Risk:        RiskHigh, Size: size, Count: files,
 					Method: MethodDir, Available: true,
 					Note: usageHint(at.root, 180),
 				})

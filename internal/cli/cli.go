@@ -164,9 +164,14 @@ func runScan(args []string) error {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	// Disk overview first so users see the "before" state.
+	// Disk overview first so users see the "before" state (stderr when
+	// emitting machine readable JSON on stdout).
 	if vols := scan.ListVolumes(); len(vols) > 0 {
-		fmt.Println(scan.DisksSummary(vols))
+		out := io.Writer(os.Stdout)
+		if *format == "json" {
+			out = os.Stderr
+		}
+		fmt.Fprintln(out, scan.DisksSummary(vols))
 	}
 
 	targets := engine.Run(ctx, func(ev scan.Event) {
