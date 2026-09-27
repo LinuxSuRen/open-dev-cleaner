@@ -233,6 +233,21 @@ func listDirs(dir string) []string {
 	return out
 }
 
+// globDirs returns existing directories matching a glob pattern.
+func globDirs(pattern string) []string {
+	matches, err := filepath.Glob(pattern)
+	if err != nil {
+		return nil
+	}
+	var out []string
+	for _, m := range matches {
+		if isDir(m) {
+			out = append(out, m)
+		}
+	}
+	return out
+}
+
 // readSmallFile returns the trimmed content of a small text file (nvm
 // alias, pyenv version) or "" when unavailable.
 func readSmallFile(path string) string {
