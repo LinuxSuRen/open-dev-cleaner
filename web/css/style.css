@@ -89,7 +89,39 @@ body {
 .btn.ghost:hover { background: var(--bg-hover); }
 .btn.small { padding: 3px 10px; font-size: 12px; border-radius: 6px; }
 
-.main { flex: 1; width: 100%; max-width: 1080px; margin: 0 auto; padding: 20px 22px 120px; }
+.main { flex: 1; width: 100%; max-width: 1260px; margin: 0 auto; padding: 20px 22px 120px; }
+
+/* ---------- two-column layout with side navigation ---------- */
+.layout { display: flex; gap: 22px; align-items: flex-start; }
+.content { flex: 1; min-width: 0; }
+.sidenav {
+  width: 232px; flex-shrink: 0; position: sticky; top: 72px;
+  max-height: calc(100vh - 92px); overflow-y: auto;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 14px; box-shadow: var(--shadow); padding: 8px 6px;
+}
+.nav-group-title {
+  font-size: 11px; font-weight: 600; color: var(--text-faint);
+  padding: 10px 12px 4px; letter-spacing: .5px;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 8px; padding: 7px 12px;
+  border-radius: 8px; cursor: pointer; color: var(--text-dim);
+  font-size: 13px; border-left: 2px solid transparent; user-select: none;
+}
+.nav-item:hover { background: var(--bg-hover); color: var(--text); }
+.nav-item.active {
+  background: var(--primary-weak); color: var(--primary);
+  border-left-color: var(--primary); font-weight: 600;
+}
+.nav-item .icon { width: 18px; text-align: center; flex-shrink: 0; }
+.nav-name { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.nav-size { font-size: 11px; color: var(--text-faint); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+@media (max-width: 960px) {
+  .layout { display: block; }
+  .sidenav { display: none; }
+}
 
 /* ---------- summary ---------- */
 .scan-progress {
@@ -188,6 +220,7 @@ body {
 .tool-section {
   background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px;
   box-shadow: var(--shadow); margin-bottom: 16px; overflow: hidden;
+  scroll-margin-top: 74px;
 }
 .tool-head {
   display: flex; align-items: center; gap: 10px; padding: 13px 18px;

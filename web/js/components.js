@@ -129,7 +129,7 @@
       },
     },
     template: `
-      <div class="tool-section">
+      <div class="tool-section" :id="'sec-' + toolKey" :data-section="toolKey">
         <div class="tool-head">
           <input type="checkbox" :checked="allChecked()" @change="toggleAll">
           <span class="icon">{{ icon }}</span>

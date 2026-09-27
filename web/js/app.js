@@ -114,9 +114,26 @@
               <button class="btn small" @click="clearSelection">取消全选</button>
             </div>
 
-            <odc-tool-section v-for="g in grouped" :key="g.tool"
-              :tool-key="g.tool" :tool-title="g.title" :targets="g.targets" :selection="selection">
-            </odc-tool-section>
+            <div class="layout">
+              <aside class="sidenav" v-if="superGroups.length">
+                <div class="nav-group" v-for="grp in superGroups" :key="grp.title">
+                  <div class="nav-group-title">{{ grp.title }}</div>
+                  <a v-for="g in grp.tools" :key="g.tool" class="nav-item"
+                    :class="{ active: activeTool === g.tool }" @click.prevent="scrollTo(g.tool)"
+                    :title="g.title + ' · ' + g.count + ' 组 · ' + fmt(g.totalSize)">
+                    <span class="icon">{{ g.icon }}</span>
+                    <span class="nav-name">{{ g.title }}</span>
+                    <span class="nav-size">{{ fmt(g.totalSize) }}</span>
+                  </a>
+                </div>
+              </aside>
+
+              <div class="content">
+                <odc-tool-section v-for="g in grouped" :key="g.tool"
+                  :tool-key="g.tool" :tool-title="g.title" :targets="g.targets" :selection="selection">
+                </odc-tool-section>
+              </div>
+            </div>
           </template>
 
           <div v-else-if="!scanning" class="empty-state">
@@ -218,6 +235,7 @@
         cleanDone: false,
         cleanSummaryText: '',
         theme: localStorage.getItem('odc-theme') || 'light',
+        activeTool: '',
       };
     },
 
@@ -253,6 +271,41 @@
           g.targets.push(t);
         }
         return groups;
+      },
+
+      // Super categories for the left navigation.
+      superGroups() {
+        const order = ['语言与运行时', '容器与模型', 'AI 编程工具', '工作区', 'IDE 与编辑器', '工具链版本', '应用缓存', '系统', '其他'];
+        const map = {
+          go: '语言与运行时', node: '语言与运行时', java: '语言与运行时',
+          python: '语言与运行时', rust: '语言与运行时', dotnet: '语言与运行时',
+          docker: '容器与模型', ollama: '容器与模型',
+          ai: 'AI 编程工具',
+          workspace: '工作区',
+          editor: 'IDE 与编辑器',
+          versions: '工具链版本',
+          apps: '应用缓存', browser: '应用缓存',
+          os: '系统',
+        };
+        const icons = {
+          docker: '🐳', go: '🐹', node: '🟢', java: '☕', python: '🐍', rust: '🦀',
+          dotnet: '🟣', workspace: '📁', ollama: '🦙', ai: '🤖', editor: '🧑‍💻',
+          versions: '🔧', apps: '🧩', browser: '🌐', os: '⚙️',
+        };
+        const buckets = new Map();
+        for (const g of this.grouped) {
+          const cat = map[g.tool] || '其他';
+          if (!buckets.has(cat)) buckets.set(cat, []);
+          buckets.get(cat).push({
+            tool: g.tool, title: g.title,
+            totalSize: g.targets.reduce((a, t) => a + (t.size || 0), 0),
+            count: g.targets.length,
+            icon: icons[g.tool] || '📦',
+          });
+        }
+        return order
+          .filter((c) => buckets.has(c))
+          .map((c) => ({ title: c, tools: buckets.get(c) }));
       },
       flatSelection() {
         const ids = [];
@@ -307,6 +360,27 @@
       toggleTheme() {
         this.theme = this.theme === 'light' ? 'dark' : 'light';
         this.applyTheme();
+      },
+
+      scrollTo(tool) {
+        this.activeTool = tool;
+        const el = document.getElementById('sec-' + tool);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      },
+
+      setupSpy() {
+        if (typeof IntersectionObserver === 'undefined') return;
+        if (this._spy) this._spy.disconnect();
+        const sections = document.querySelectorAll('[data-section]');
+        if (!sections.length) return;
+        this._spy = new IntersectionObserver((entries) => {
+          for (const e of entries) {
+            if (e.isIntersecting) {
+              this.activeTool = e.target.getAttribute('data-section');
+            }
+          }
+        }, { rootMargin: '-72px 0px -60% 0px', threshold: 0 });
+        sections.forEach((s) => this._spy.observe(s));
       },
 
       async loadVersion() {
@@ -462,6 +536,12 @@
         this.cleaning = false;
         this.cleanDone = true;
         this.loadDisks(); // refresh free space after cleaning
+      },
+    },
+
+    watch: {
+      grouped() {
+        this.$nextTick(() => this.setupSpy());
       },
     },
 
