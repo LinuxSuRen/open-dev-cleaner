@@ -68,6 +68,12 @@ body {
 .brand .logo { font-size: 22px; }
 .brand .ver { color: var(--text-faint); font-size: 12px; font-weight: 500; }
 .topbar .spacer { flex: 1; }
+.gh-link {
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--text-dim); padding: 6px; border-radius: 8px;
+  transition: color .15s, background .15s;
+}
+.gh-link:hover { color: var(--text); background: var(--bg-hover); }
 .btn {
   appearance: none; border: 1px solid var(--border); background: var(--bg-card);
   color: var(--text); border-radius: 8px; padding: 7px 14px; font-size: 13px;

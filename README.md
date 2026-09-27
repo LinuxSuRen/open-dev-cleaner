@@ -20,7 +20,7 @@ A cross-platform (Windows / macOS / Linux) open-source disk cleaner for develope
 
 ## 📦 安装 / Install
 
-从 [Releases](../../releases) 下载对应平台的压缩包,或自行编译:
+从 [Releases](../../releases) 下载对应平台的压缩包(`open-dev-cleaner_<os>_<arch>.tar.gz` / `.zip`),或自行编译:
 
 ```bash
 go install github.com/LinuxSuRen/open-dev-cleaner@latest
@@ -29,6 +29,15 @@ git clone https://github.com/LinuxSuRen/open-dev-cleaner.git
 cd open-dev-cleaner && make build
 ./bin/open-dev-cleaner
 ```
+
+### 发布流程 / Release flow
+
+推送代码后,在 GitHub 上创建并 **Publish 一个 Release**(打 `v*` tag)即可:
+
+1. `build` 工作流对每次 push / PR 运行 `go vet` + `go test`
+2. Release 发布后,`release` 工作流自动交叉编译 **linux / darwin / windows × amd64 / arm64** 六个平台,生成压缩包与 `checksums.txt`,并上传挂载到该 Release
+
+也支持在 Actions 页面手动 `workflow_dispatch` 指定 tag 补传二进制。本地可用 `make snapshot` 快速构建全平台产物。
 
 ## 🚀 使用 / Usage
 
