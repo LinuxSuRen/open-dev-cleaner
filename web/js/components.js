@@ -76,7 +76,7 @@
             </div>
             <div class="t-desc">{{ target.description }}</div>
             <div v-if="target.path" class="t-path" :title="target.path">{{ target.path }}</div>
-            <div v-if="!target.available && target.note" class="unavailable-note">ⓘ {{ target.note }}</div>
+            <div v-if="target.note" class="row-note" :class="{ warn: !target.available }">ⓘ {{ target.note }}</div>
           </div>
           <div class="t-size">
             {{ fmt(sumSize) }}
