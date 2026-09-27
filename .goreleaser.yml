@@ -1,0 +1,43 @@
+version: 2
+
+project_name: open-dev-cleaner
+
+builds:
+  - id: open-dev-cleaner
+    main: .
+    binary: open-dev-cleaner
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+      - -X main.version={{ .Version }}
+      - -X main.commit={{ .Commit }}
+      - -X main.buildDate={{ .Date }}
+
+archives:
+  - id: default
+    builds:
+      - open-dev-cleaner
+    name_template: >-
+      {{ .ProjectName }}_{{ .Os }}_{{ .Arch }}
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+
+checksum:
+  name_template: "checksums.txt"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^chore:"

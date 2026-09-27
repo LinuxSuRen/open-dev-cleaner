@@ -1,0 +1,418 @@
+/* Open Dev Cleaner — root application */
+(function () {
+  'use strict';
+  const { createApp, reactive } = Vue;
+
+  const RISKS = [
+    { key: 'safe', label: '安全', desc: '纯缓存,工具自动重建' },
+    { key: 'caution', label: '谨慎', desc: '需重新下载或重建' },
+    { key: 'high', label: '高风险', desc: '需重新安装依赖/镜像' },
+    { key: 'dangerous', label: '危险', desc: '数据类,删除后不可恢复' },
+  ];
+
+  const app = createApp({
+    template: `
+      <div>
+        <header class="topbar">
+          <div class="brand">
+            <span class="logo">🧹</span>
+            <span>Open Dev Cleaner</span>
+            <span class="ver">v{{ version.version }} · {{ version.goos }}</span>
+          </div>
+          <div class="spacer"></div>
+          <button class="btn ghost" @click="toggleTheme" :title="'切换主题'">
+            {{ theme === 'light' ? '🌙' : '☀️' }}
+          </button>
+          <button class="btn primary" :disabled="scanning" @click="startScan">
+            {{ scanning ? '扫描中…' : (targets.length ? '重新扫描' : '开始扫描') }}
+          </button>
+        </header>
+
+        <main class="main">
+          <div v-if="scanning || progressText" class="scan-progress">
+            <span class="spinner" v-if="scanning"></span>
+            <span>{{ progressText }}<template v-if="scanning && progressTotal"> ({{ progressDone }}/{{ progressTotal }} 工具)</template></span>
+            <span style="margin-left:auto;color:var(--text-dim)">首次扫描大目录可能需要几十秒</span>
+          </div>
+          <div v-if="scanError" class="scan-progress" style="background:var(--dangerous-weak);color:var(--dangerous)">
+            ⚠️ {{ scanError }}
+          </div>
+
+          <template v-if="targets.length">
+            <div class="summary-grid">
+              <div class="stat-card total">
+                <div class="num">{{ fmt(totalSize) }}</div>
+                <div class="lbl">可释放空间(共 {{ targets.length }} 组)</div>
+              </div>
+              <div class="stat-card safe">
+                <div class="num">{{ fmt(byRisk.safe) }}</div>
+                <div class="lbl">安全 · 纯缓存自动重建</div>
+              </div>
+              <div class="stat-card caution">
+                <div class="num">{{ fmt(byRisk.caution) }}</div>
+                <div class="lbl">谨慎 · 需重新下载/重建</div>
+              </div>
+              <div class="stat-card high">
+                <div class="num">{{ fmt(byRisk.high) }}</div>
+                <div class="lbl">高风险 · 需重新安装</div>
+              </div>
+              <div class="stat-card dangerous">
+                <div class="num">{{ fmt(byRisk.dangerous) }}</div>
+                <div class="lbl">危险 · 不可恢复</div>
+              </div>
+            </div>
+            <div class="risk-bars" :title="'按风险等级占比'">
+              <div class="seg-safe" :style="{ width: totalPercent.safe + '%' }"></div>
+              <div class="seg-caution" :style="{ width: totalPercent.caution + '%' }"></div>
+              <div class="seg-high" :style="{ width: totalPercent.high + '%' }"></div>
+              <div class="seg-dangerous" :style="{ width: totalPercent.dangerous + '%' }"></div>
+            </div>
+
+            <div class="toolbar">
+              <button class="chip" :class="{ active: riskFilter === 'all' }" @click="riskFilter = 'all'">
+                全部
+              </button>
+              <button v-for="r in riskList" :key="r.key" class="chip"
+                :class="{ active: riskFilter === r.key }" @click="riskFilter = r.key"
+                :title="r.desc">
+                <span class="dot" :style="{ background: 'var(--' + r.key + ')' }"></span>
+                {{ r.label }} {{ fmt(byRisk[r.key] || 0) }}
+              </button>
+              <div class="search">
+                <span>🔎</span>
+                <input v-model="search" placeholder="搜索名称或路径,如 node_modules、gradle…">
+              </div>
+              <button class="btn small" @click="selectAllVisible">全选可见</button>
+              <button class="btn small" @click="clearSelection">取消全选</button>
+            </div>
+
+            <odc-tool-section v-for="g in grouped" :key="g.tool"
+              :tool-key="g.tool" :tool-title="g.title" :targets="g.targets" :selection="selection">
+            </odc-tool-section>
+          </template>
+
+          <div v-else-if="!scanning" class="empty-state">
+            <div class="big">🧹</div>
+            <p>没有发现可清理的内容(或扫描未完成)</p>
+            <button class="btn primary" @click="startScan">重新扫描</button>
+          </div>
+        </main>
+
+        <footer class="clean-bar" v-if="targets.length">
+          <div class="sel-info">
+            <div class="big">已选 {{ selectedTargets.length }} 项 · 约 {{ fmt(selectedSize) }}</div>
+            <div class="sub">默认勾选"安全"级;谨慎/高风险/危险项请按需手动勾选</div>
+          </div>
+          <button class="btn" @click="clearSelection" :disabled="cleaning">清空选择</button>
+          <button class="btn primary" :disabled="!canClean" @click="openConfirm">
+            清理选中项
+          </button>
+        </footer>
+
+        <div v-if="showConfirm" class="modal-mask" @click.self="closeConfirm">
+          <div class="modal">
+            <div class="modal-head">🧹 确认清理</div>
+            <div class="modal-body">
+              <p>即将清理以下 <b>{{ selectedTargets.length }}</b> 项,预计释放 <b>{{ fmt(selectedSize) }}</b>:</p>
+              <ul class="confirm-list">
+                <li v-for="t in selectedTargets" :key="t.id">
+                  <risk-badge :risk="t.risk"></risk-badge>
+                  <span>{{ t.title }}</span>
+                  <span class="sz">{{ fmt(t.size) }}</span>
+                </li>
+              </ul>
+              <div v-if="selectedHasDangerous" class="danger-zone">
+                ⚠️ 包含<b>危险</b>等级目标(如 Docker 数据卷),删除后<b>不可恢复</b>!
+                请输入 <b>DELETE</b> 或 <b>删除</b> 以确认:
+                <input v-model="dangerText" placeholder="DELETE" autocomplete="off">
+              </div>
+            </div>
+            <div class="modal-foot">
+              <button class="btn" @click="closeConfirm" :disabled="cleaning">取消</button>
+              <button class="btn" :class="selectedHasDangerous ? 'danger' : 'primary'"
+                :disabled="cleaning || (selectedHasDangerous && !dangerReady)"
+                @click="doClean">
+                {{ selectedHasDangerous ? '确认删除' : '开始清理' }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div v-if="showLog" class="modal-mask">
+          <div class="modal">
+            <div class="modal-head">
+              <span v-if="cleaning" class="spinner"></span>
+              {{ cleaning ? '正在清理…' : (cleanDone ? '清理完成' : '清理日志') }}
+            </div>
+            <div class="modal-body">
+              <div class="log-view">
+                <div v-for="(l, i) in logs" :key="i" class="log-line" :class="l.cls">{{ l.msg }}</div>
+              </div>
+              <p v-if="cleanDone && cleanSummaryText" style="margin-bottom:0">
+                ✅ {{ cleanSummaryText }}
+              </p>
+            </div>
+            <div class="modal-foot">
+              <button v-if="cleanDone" class="btn" @click="showLog = false">关闭</button>
+              <button v-if="cleanDone" class="btn primary" @click="showLog = false; startScan()">重新扫描</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `,
+
+    data() {
+      return {
+        version: { version: '…', goos: '' },
+        scanning: false,
+        scanError: '',
+        progressText: '',
+        progressDone: 0,
+        progressTotal: 0,
+        targets: [],
+        summary: null,
+        selection: reactive({}),
+        riskFilter: 'all',
+        search: '',
+        showConfirm: false,
+        dangerText: '',
+        showLog: false,
+        cleaning: false,
+        logs: [],
+        cleanDone: false,
+        cleanSummaryText: '',
+        theme: localStorage.getItem('odc-theme') || 'light',
+      };
+    },
+
+    computed: {
+      fmt() { return ODC.fmtSize; },
+      riskList() { return RISKS; },
+      byRisk() {
+        const out = { safe: 0, caution: 0, high: 0, dangerous: 0 };
+        for (const t of this.targets) out[t.risk] = (out[t.risk] || 0) + (t.size || 0);
+        return out;
+      },
+      totalSize() { return this.targets.reduce((a, t) => a + (t.size || 0), 0); },
+      totalPercent() {
+        if (!this.totalSize) return { safe: 0, caution: 0, high: 0, dangerous: 0 };
+        return {
+          safe: (this.byRisk.safe / this.totalSize) * 100,
+          caution: (this.byRisk.caution / this.totalSize) * 100,
+          high: (this.byRisk.high / this.totalSize) * 100,
+          dangerous: (this.byRisk.dangerous / this.totalSize) * 100,
+        };
+      },
+      grouped() {
+        const groups = [];
+        const byTool = new Map();
+        for (const t of this.targets) {
+          if (!this.matchFilter(t)) continue;
+          let g = byTool.get(t.tool);
+          if (!g) {
+            g = { tool: t.tool, title: t.toolTitle, targets: [] };
+            byTool.set(t.tool, g);
+            groups.push(g);
+          }
+          g.targets.push(t);
+        }
+        return groups;
+      },
+      flatSelection() {
+        const ids = [];
+        const walk = (t) => {
+          if (this.selection[t.id]) ids.push(t.id);
+          for (const c of t.items || []) walk(c);
+        };
+        for (const t of this.targets) walk(t);
+        return ids;
+      },
+      selectedTargets() {
+        // top-level and child targets currently selected, excluding children
+        // whose ancestor group is already selected
+        const out = [];
+        const walk = (t, ancestorSelected) => {
+          const sel = !ancestorSelected && this.selection[t.id];
+          if (sel) out.push(t);
+          for (const c of t.items || []) walk(c, ancestorSelected || sel);
+        };
+        for (const t of this.targets) walk(t, false);
+        return out;
+      },
+      selectedSize() { return this.selectedTargets.reduce((a, t) => a + (t.size || 0), 0); },
+      selectedHasDangerous() { return this.selectedTargets.some((t) => t.risk === 'dangerous'); },
+      dangerReady() { return this.dangerText.trim().toUpperCase() === 'DELETE' || this.dangerText.trim() === '删除'; },
+      canClean() { return !this.cleaning && this.selectedTargets.length > 0; },
+      scanFinished() { return !this.scanning && this.targets.length >= 0 && this.summary !== null; },
+    },
+
+    methods: {
+      riskLabel: ODC.riskLabel,
+
+      matchFilter(t) {
+        const self = this;
+        const matchOne = (x) => {
+          if (self.riskFilter !== 'all' && x.risk !== self.riskFilter) return false;
+          if (self.search) {
+            const q = self.search.toLowerCase();
+            const hay = (x.title + ' ' + (x.path || '') + ' ' + (x.description || '')).toLowerCase();
+            if (!hay.includes(q)) return false;
+          }
+          return true;
+        };
+        const matchDeep = (x) => matchOne(x) || (x.items || []).some(matchDeep);
+        return matchDeep(t);
+      },
+
+      applyTheme() {
+        document.documentElement.setAttribute('data-theme', this.theme);
+        localStorage.setItem('odc-theme', this.theme);
+      },
+      toggleTheme() {
+        this.theme = this.theme === 'light' ? 'dark' : 'light';
+        this.applyTheme();
+      },
+
+      async loadVersion() {
+        try {
+          const res = await fetch('/api/version');
+          this.version = await res.json();
+        } catch (e) { /* ignore */ }
+      },
+
+      startScan() {
+        if (this.scanning) return;
+        this.scanning = true;
+        this.scanError = '';
+        this.summary = null;
+        this.targets = [];
+        this.progressDone = 0;
+        this.progressTotal = 0;
+        this.progressText = '正在启动扫描…';
+        for (const k of Object.keys(this.selection)) delete this.selection[k];
+
+        const es = new EventSource('/api/scan');
+        es.onmessage = (ev) => {
+          let data;
+          try { data = JSON.parse(ev.data); } catch (e) { return; }
+          if (data.type === 'progress') {
+            if (data.message === 'scanning') {
+              this.progressTotal += 1;
+              this.progressText = '正在扫描: ' + data.tool;
+            } else if (data.message === 'done') {
+              this.progressDone += 1;
+              this.progressText = '已完成 ' + this.progressDone + '/' + this.progressTotal;
+            }
+          } else if (data.type === 'target' && data.target) {
+            this.targets.push(data.target);
+            // default-select safe & available targets on arrival
+            if (data.target.risk === 'safe' && data.target.available) {
+              this.selection[data.target.id] = true;
+            }
+          } else if (data.type === 'done') {
+            this.summary = data.summary;
+            this.scanning = false;
+            this.progressText = '';
+            es.close();
+          }
+        };
+        es.onerror = () => {
+          if (this.scanning) {
+            this.scanning = false;
+            this.scanError = '扫描连接中断,请重试';
+          }
+          es.close();
+        };
+      },
+
+      selectAllVisible() {
+        const walk = (t) => {
+          if (t.available && this.matchFilter(t)) this.selection[t.id] = true;
+          for (const c of t.items || []) walk(c);
+        };
+        for (const t of this.targets) walk(t);
+      },
+      clearSelection() {
+        for (const k of Object.keys(this.selection)) delete this.selection[k];
+      },
+
+      openConfirm() { this.showConfirm = true; this.dangerText = ''; },
+      closeConfirm() { if (!this.cleaning) this.showConfirm = false; },
+
+      async doClean() {
+        this.showConfirm = false;
+        this.showLog = true;
+        this.cleaning = true;
+        this.cleanDone = false;
+        this.logs = [];
+        this.cleanSummaryText = '';
+        const log = (msg, cls) => {
+          this.logs.push({ msg, cls: cls || '' });
+        };
+        log('开始清理 ' + this.selectedTargets.length + ' 项…');
+
+        try {
+          const res = await fetch('/api/clean', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              ids: this.flatSelection,
+              dangerConfirm: this.dangerText.trim().toUpperCase() === 'DELETE' || this.dangerText.trim() === '删除',
+            }),
+          });
+          if (!res.ok || !res.body) {
+            const text = await res.text();
+            let msg = text;
+            try { msg = JSON.parse(text).error || text; } catch (e) { /* raw */ }
+            log('请求失败: ' + msg, 'err');
+            this.cleaning = false;
+            this.cleanDone = true;
+            return;
+          }
+
+          const reader = res.body.getReader();
+          const decoder = new TextDecoder();
+          let buf = '';
+          for (;;) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buf += decoder.decode(value, { stream: true });
+            for (;;) {
+              const idx = buf.indexOf('\n\n');
+              if (idx < 0) break;
+              const chunk = buf.slice(0, idx);
+              buf = buf.slice(idx + 2);
+              if (!chunk.startsWith('data: ')) continue;
+              let data;
+              try { data = JSON.parse(chunk.slice(6)); } catch (e) { continue; }
+              if (data.type === 'log') {
+                const cls = data.message.startsWith('[完成]') || data.message.startsWith('  ')
+                  ? 'ok' : (data.message.startsWith('[失败]') || data.message.startsWith('[拒绝]') ? 'err' : '');
+                log(data.message, cls);
+              } else if (data.type === 'done') {
+                log(data.message, 'ok');
+                this.cleanSummaryText = data.message;
+              }
+            }
+          }
+        } catch (e) {
+          log('网络错误: ' + e, 'err');
+        }
+        this.cleaning = false;
+        this.cleanDone = true;
+      },
+    },
+
+    mounted() {
+      this.applyTheme();
+      this.loadVersion();
+      this.startScan();
+    },
+  });
+
+  app.component('risk-badge', window.ODCRiskBadge);
+  app.component('odc-target-row', window.OdcTargetRow);
+  app.component('odc-tool-section', window.OdcToolSection);
+
+  app.mount('#app');
+})();
