@@ -121,8 +121,15 @@
 
           <div v-else-if="!scanning" class="empty-state">
             <div class="big">🧹</div>
-            <p>没有发现可清理的内容(或扫描未完成)</p>
-            <button class="btn primary" @click="startScan">重新扫描</button>
+            <template v-if="summary === null">
+              <p style="font-size:16px;font-weight:600">扫描本机,找出可释放的磁盘空间</p>
+              <p style="margin-top:0">Go / Node / Java / Python / Rust / Docker / AI 工具 / 工作区构建产物……<br>按危险等级分级展示,默认只勾选安全项</p>
+              <button class="btn primary" style="font-size:15px;padding:10px 26px" @click="startScan">🔍 开始扫描</button>
+            </template>
+            <template v-else>
+              <p>没有发现可清理的内容</p>
+              <button class="btn primary" @click="startScan">重新扫描</button>
+            </template>
           </div>
         </main>
 
@@ -461,8 +468,7 @@
     mounted() {
       this.applyTheme();
       this.loadVersion();
-      this.loadDisks();
-      this.startScan();
+      this.loadDisks(); // disk overview is cheap; scanning stays manual
     },
   });
 
