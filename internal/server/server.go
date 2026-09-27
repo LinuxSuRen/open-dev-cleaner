@@ -48,6 +48,7 @@ func (s *Server) Handler() http.Handler {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("GET /api/version", s.handleVersion)
+	mux.HandleFunc("GET /api/disks", s.handleDisks)
 	mux.HandleFunc("GET /api/last", s.handleLast)
 	mux.HandleFunc("GET /api/scan", s.handleScan)
 	mux.HandleFunc("POST /api/clean", s.handleClean)
@@ -129,6 +130,12 @@ func (s *Server) handleVersion(w http.ResponseWriter, r *http.Request) {
 		"version": Version, "commit": Commit, "buildDate": BuildDate,
 		"goos": s.env.GOOS, "home": s.env.Home,
 	})
+}
+
+// handleDisks reports per-volume disk usage (platform specific:
+// drive letters on Windows, mount points on Linux, APFS volumes on macOS).
+func (s *Server) handleDisks(w http.ResponseWriter, r *http.Request) {
+	writeJSON(w, map[string]any{"disks": scan.ListVolumes()})
 }
 
 func (s *Server) handleLast(w http.ResponseWriter, r *http.Request) {

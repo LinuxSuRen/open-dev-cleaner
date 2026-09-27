@@ -164,6 +164,11 @@ func runScan(args []string) error {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
+	// Disk overview first so users see the "before" state.
+	if vols := scan.ListVolumes(); len(vols) > 0 {
+		fmt.Println(scan.DisksSummary(vols))
+	}
+
 	targets := engine.Run(ctx, func(ev scan.Event) {
 		if ev.Type == "target" && ev.Target != nil && *format == "table" && matchRisk(*risk, ev.Target.Risk) {
 			printTarget(os.Stdout, ev.Target)

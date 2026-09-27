@@ -11,9 +11,11 @@ A cross-platform (Windows / macOS / Linux) open-source disk cleaner for develope
 ## ✨ 特性 / Features
 
 - **一键扫描**:并发扫描十几个开发工具生态的磁盘占用(见下表)
+- **磁盘概览**:按平台展示全部卷的总空间/剩余空间——Linux 遍历 `/proc/mounts` 挂载点、macOS 识别 APFS 卷(`/` 与 `/Volumes/*`)、Windows 枚举盘符并区分本地/可移动/网络驱动器;清理完成后自动刷新
 - **危险等级分级**:每个清理项都标注 `安全 / 谨慎 / 高风险 / 危险` 四级,默认只勾选安全项,危险项需输入确认
 - **Web 界面**:Vue 3 驱动的响应式界面,支持暗色主题、搜索、风险过滤、实时清理日志(SSE 流式)
 - **单二进制**:前端(Vue 运行时 + 组件)全部 `go:embed` 嵌入,编译产物一个文件,零依赖、离线可用
+- **API**:`GET /api/disks` 各卷用量、`GET /api/scan` 扫描、`POST /api/clean` 清理,便于二次集成
 - **跨平台**:同一份代码支持 Windows / macOS / Linux(amd64 / arm64)
 - **CLI + Web 双模式**:既能开网页点选,也能在终端 `scan` / `clean` / `--dry-run`
 - **安全护栏**:目录删除强制校验"安全根",绝不越界;`--dry-run` 全链路预览

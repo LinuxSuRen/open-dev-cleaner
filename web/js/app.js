@@ -44,6 +44,28 @@
             ⚠️ {{ scanError }}
           </div>
 
+          <template v-if="disks.length">
+            <div class="disk-card">
+              <div class="disk-head">
+                <span class="disk-title">💾 磁盘空间</span>
+                <span class="disk-total-free">合计剩余 <b>{{ fmt(disks.reduce((a, d) => a + (d.free || 0), 0)) }}</b></span>
+              </div>
+              <div v-for="d in disks" :key="d.path" class="disk-row">
+                <div class="disk-name" :title="diskTitle(d)">
+                  <span>{{ diskIcon(d) }}</span>
+                  <span class="disk-name-text">{{ diskTitle(d) }}</span>
+                </div>
+                <div class="disk-bar">
+                  <div class="disk-fill" :class="diskBarClass(d)"
+                    :style="{ width: (d.total ? (d.used / d.total) * 100 : 0) + '%' }"></div>
+                </div>
+                <div class="disk-meta">
+                  剩余 <b :class="'free-' + diskBarClass(d)">{{ fmt(d.free) }}</b> / 总 {{ fmt(d.total) }}
+                </div>
+              </div>
+            </div>
+          </template>
+
           <template v-if="targets.length">
             <div class="summary-grid">
               <div class="stat-card total">
@@ -170,6 +192,7 @@
     data() {
       return {
         version: { version: '…', goos: '' },
+        disks: [],
         scanning: false,
         scanError: '',
         progressText: '',
@@ -284,6 +307,31 @@
           const res = await fetch('/api/version');
           this.version = await res.json();
         } catch (e) { /* ignore */ }
+      },
+
+      async loadDisks() {
+        try {
+          const res = await fetch('/api/disks');
+          const data = await res.json();
+          this.disks = data.disks || [];
+        } catch (e) { /* ignore */ }
+      },
+
+      diskBarClass(v) {
+        const pct = v.total ? (v.used / v.total) * 100 : 0;
+        if (pct >= 90) return 'crit';
+        if (pct >= 70) return 'warn';
+        return 'ok';
+      },
+      diskIcon(v) {
+        return { fixed: '💽', removable: '🔌', remote: '🌐', ramdisk: '🧠', readonly: '🔒', volume: '💾' }[v.kind] || '💾';
+      },
+      diskTitle(v) {
+        let name = v.label ? v.label + ' (' + v.path + ')' : v.path;
+        if (v.kind === 'removable') name += ' · 可移动';
+        if (v.kind === 'remote') name += ' · 网络驱动器';
+        if (v.fsType) name += ' · ' + v.fsType;
+        return name;
       },
 
       startScan() {
@@ -406,12 +454,14 @@
         }
         this.cleaning = false;
         this.cleanDone = true;
+        this.loadDisks(); // refresh free space after cleaning
       },
     },
 
     mounted() {
       this.applyTheme();
       this.loadVersion();
+      this.loadDisks();
       this.startScan();
     },
   });
