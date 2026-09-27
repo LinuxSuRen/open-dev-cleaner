@@ -279,7 +279,7 @@
         const map = {
           go: '语言与运行时', node: '语言与运行时', java: '语言与运行时',
           python: '语言与运行时', rust: '语言与运行时', dotnet: '语言与运行时',
-          docker: '容器与模型', ollama: '容器与模型',
+          docker: '容器与模型', ollama: '容器与模型', kube: '容器与模型',
           ai: 'AI 编程工具',
           workspace: '工作区',
           editor: 'IDE 与编辑器',
@@ -290,7 +290,7 @@
         const icons = {
           docker: '🐳', go: '🐹', node: '🟢', java: '☕', python: '🐍', rust: '🦀',
           dotnet: '🟣', workspace: '📁', ollama: '🦙', ai: '🤖', editor: '🧑‍💻',
-          versions: '🔧', apps: '🧩', browser: '🌐', os: '⚙️',
+          versions: '🔧', apps: '🧩', browser: '🌐', os: '⚙️', kube: '☸️',
         };
         const buckets = new Map();
         for (const g of this.grouped) {

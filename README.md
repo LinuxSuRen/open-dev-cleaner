@@ -70,6 +70,7 @@ open-dev-cleaner clean --ids go:build-cache,docker:dangling --dry-run
 | **Python** | pip / uv / poetry / pipenv / conda 缓存 | 安全 / 谨慎 |
 | **Rust** | Cargo registry / git 依赖缓存(rustup 工具链不动) | 谨慎 |
 | **Docker** | 悬空镜像、未使用镜像(可逐个勾选)、停止的容器、构建缓存、**数据卷** | 谨慎 → **危险** |
+| **Kubernetes** | kubectl 发现缓存、krew 插件缓存/插件、Helm 缓存与插件、**minikube** 集群与缓存、colima/lima 虚拟机、Rancher Desktop、Podman(镜像/容器/卷,未使用时提示)、nerdctl rootless 存储、k9s、Skaffold、Okteto | 安全 → **危险** |
 | **Ollama** | 本地大模型(逐个列出,可单独删除);服务未运行时自动临时启动 `ollama serve` 完成扫描后关闭(设置 `OLLAMA_HOST` 时不自动启动) | 高风险 |
 | **AI 编程工具** | OpenCode、DeepSeek Harness (dsh)、Claude Code、Codex、Gemini CLI、Aider 的日志/快照/会话缓存,以及"删除全部本地数据" | 安全 → 高风险 |
 | **版本管理器** | nvm / sdkman / pyenv / ~/sdk 的各版本工具链,逐个列出可单独删除,标注当前版本与"长期未使用"提示;含 nvm、sdkman 下载缓存 | 安全 / 高风险 |

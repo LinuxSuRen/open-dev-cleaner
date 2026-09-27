@@ -50,7 +50,8 @@
         const icons = {
           docker: '🐳', go: '🐹', node: '🟢', java: '☕', python: '🐍',
           rust: '🦀', workspace: '📁', ollama: '🦙', editor: '🧑‍💻',
-          apps: '🧩', browser: '🌐', os: '⚙️',
+          apps: '🧩', browser: '🌐', os: '⚙️', ai: '🤖', versions: '🔧',
+          dotnet: '🟣', kube: '☸️',
         };
         return icons[this.target.tool] || '📦';
       },
@@ -109,6 +110,7 @@
         const icons = {
           docker: '🐳', go: '🐹', node: '🟢', java: '☕', python: '🐍', rust: '🦀',
           workspace: '📁', ollama: '🦙', editor: '🧑‍💻', apps: '🧩', browser: '🌐', os: '⚙️',
+          ai: '🤖', versions: '🔧', dotnet: '🟣', kube: '☸️',
         };
         return icons[this.toolKey] || '📦';
       },

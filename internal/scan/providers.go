@@ -36,6 +36,7 @@ const errNoExternal = constErr("external commands disabled")
 func DefaultProviders() []Provider {
 	return []Provider{
 		&DockerProvider{},
+		&KubeProvider{},
 		&GoProvider{},
 		&NodeProvider{},
 		&JavaProvider{},
