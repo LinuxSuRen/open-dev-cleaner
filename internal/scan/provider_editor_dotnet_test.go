@@ -109,10 +109,17 @@ func TestDotNetProvider(t *testing.T) {
 	for _, g := range got {
 		found[g.ID] = g
 	}
-	if found["dotnet:global-packages"] == nil || found["dotnet:global-packages"].Size != 700 {
+	allocatedOf := func(path string) int64 {
+		fi, err := os.Stat(path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return fileAllocated(fi)
+	}
+	if gp := found["dotnet:global-packages"]; gp == nil || gp.Size != allocatedOf(filepath.Join(home, ".nuget", "packages", "newtonsoft.json", "13.0.3", "lib.dll")) {
 		t.Errorf("global packages target wrong: %+v", found["dotnet:global-packages"])
 	}
-	if found["dotnet:http-cache"] == nil || found["dotnet:http-cache"].Size != 200 {
+	if hc := found["dotnet:http-cache"]; hc == nil || hc.Size != allocatedOf(filepath.Join(home, ".local", "share", "NuGet", "http-cache", "pkg.zip")) {
 		t.Errorf("http cache target wrong: %+v", found["dotnet:http-cache"])
 	}
 }

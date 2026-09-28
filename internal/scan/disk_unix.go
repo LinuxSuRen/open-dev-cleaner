@@ -50,6 +50,17 @@ func fileExists(p string) bool {
 	return err == nil
 }
 
+// fileAllocated returns the on-disk allocated size of a file. Sparse
+// files (Docker.raw, APFS clones) report a huge logical size via
+// FileInfo.Size() while occupying far fewer blocks — st_blocks*512 is
+// the real footprint, matching what `du` reports.
+func fileAllocated(fi os.FileInfo) int64 {
+	if st, ok := fi.Sys().(*syscall.Stat_t); ok && st.Blocks > 0 {
+		return int64(st.Blocks) * 512
+	}
+	return fi.Size()
+}
+
 func darwinVolumes() []DiskVolume {
 	var vols []DiskVolume
 	if v, ok := statfsVolume("/", "", ""); ok {

@@ -11,8 +11,10 @@ import (
 	"time"
 )
 
-// DirSize walks path and returns (bytes, fileCount) of regular files.
-// Symlinked directories are not followed. Unreadable entries are skipped.
+// DirSize walks path and returns (bytes, fileCount) of regular files,
+// counting on-disk allocated size (sparse files and APFS clones occupy
+// fewer blocks than their logical size). Symlinked directories are not
+// followed. Unreadable entries are skipped.
 func DirSize(ctx context.Context, path string) (int64, int64) {
 	if path == "" {
 		return 0, 0
@@ -29,7 +31,7 @@ func DirSize(ctx context.Context, path string) (int64, int64) {
 		if err != nil || !info.Mode().IsRegular() {
 			return nil
 		}
-		total += info.Size()
+		total += fileAllocated(info)
 		files++
 		if files%4096 == 0 { // cooperative cancellation
 			select {

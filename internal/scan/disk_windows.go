@@ -3,10 +3,16 @@
 package scan
 
 import (
+	"os"
 	"strings"
 	"syscall"
 	"unsafe"
 )
+
+// fileAllocated on Windows falls back to the logical size: NTFS sparse
+// files are rare among the caches scanned here and block counts are not
+// exposed through os.FileInfo.
+func fileAllocated(fi os.FileInfo) int64 { return fi.Size() }
 
 var (
 	modKernel32            = syscall.NewLazyDLL("kernel32.dll")

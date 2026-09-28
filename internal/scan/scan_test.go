@@ -66,8 +66,21 @@ func TestDirSize(t *testing.T) {
 	writeFile("sub/deep/c.bin", 300)
 
 	size, files := DirSize(context.Background(), dir)
-	if size != 600 || files != 3 {
-		t.Fatalf("DirSize = (%d, %d), want (600, 3)", size, files)
+	if files != 3 {
+		t.Fatalf("DirSize files = %d, want 3", files)
+	}
+	// Allocated semantics: each regular file counts as its on-disk blocks
+	// (logical size rounded up to the filesystem block size).
+	var want int64
+	for _, p := range []string{"a.bin", filepath.Join("sub", "b.bin"), filepath.Join("sub", "deep", "c.bin")} {
+		fi, err := os.Stat(filepath.Join(dir, p))
+		if err != nil {
+			t.Fatal(err)
+		}
+		want += fileAllocated(fi)
+	}
+	if size != want {
+		t.Fatalf("DirSize = %d, want allocated sum %d", size, want)
 	}
 
 	// Missing dir must not panic or hang.

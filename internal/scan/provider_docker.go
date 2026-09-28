@@ -221,12 +221,16 @@ func (p *DockerProvider) daemonDown(ctx context.Context, env *Env, err error) *T
 		Category: "镜像", Title: "Docker 未运行",
 		Description: note, Risk: RiskCaution, Available: false, Note: note,
 	}
-	// On macOS give a hint about the Docker Desktop VM disk size.
+	// On macOS give a hint about the Docker Desktop VM disk size. The
+	// raw device is a sparse file whose logical size usually equals the
+	// whole disk — only the allocated blocks are really taken.
 	if env.GOOS == "darwin" {
 		raw := filepath.Join(env.Home, "Library", "Containers", "com.docker.docker", "Data", "vms", "0", "data", "Docker.raw")
 		if fi, statErr := statFile(raw); statErr == nil {
-			t.Size = fi.Size()
-			t.Note = fmt.Sprintf("Docker 未运行;虚拟磁盘 %s 占用约 %s(稀疏文件)。启动 Docker 后可通过镜像/缓存清理回收。", raw, FormatSize(fi.Size()))
+			allocated := fileAllocated(fi)
+			t.Size = allocated
+			t.Note = fmt.Sprintf("Docker 未运行;虚拟磁盘实际占用约 %s(稀疏文件,逻辑大小 %s,并非真实占用)。启动 Docker 后可通过镜像/缓存清理回收。",
+				FormatSize(allocated), FormatSize(fi.Size()))
 			t.Description = t.Note
 		}
 	}
