@@ -37,6 +37,7 @@ func DefaultProviders() []Provider {
 	return []Provider{
 		&DockerProvider{},
 		&KubeProvider{},
+		&InfraProvider{},
 		&GoProvider{},
 		&NodeProvider{},
 		&JavaProvider{},
