@@ -212,10 +212,14 @@ func (p *VersionsProvider) Scan(ctx context.Context, env *Env, emit func(*Target
 	}
 }
 
+// emitIfAny sorts the group's children by disk usage (descending) and
+// emits it when non-empty.
 func emitIfAny(group *Target, emit func(*Target)) {
-	if len(group.Items) > 0 {
-		emit(group)
+	if len(group.Items) == 0 {
+		return
 	}
+	sort.SliceStable(group.Items, func(i, j int) bool { return group.Items[i].Size > group.Items[j].Size })
+	emit(group)
 }
 
 // listDirs returns the immediate sub-directories of dir.

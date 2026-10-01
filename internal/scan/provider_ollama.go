@@ -5,9 +5,10 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	exec "os/exec"
+	"os/exec"
 	"path/filepath"
 	"runtime"
+	"sort"
 	"strings"
 	"syscall"
 	"time"
@@ -81,6 +82,8 @@ func (p *OllamaProvider) Scan(ctx context.Context, env *Env, emit func(*Target))
 			Available: true,
 		})
 	}
+	// largest models first
+	sort.SliceStable(children, func(i, j int) bool { return children[i].Size > children[j].Size })
 
 	emit(&Target{
 		ID: tool + ":models", Tool: tool, ToolTitle: title,
