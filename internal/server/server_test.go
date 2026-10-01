@@ -2,9 +2,11 @@ package server
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"runtime"
 	"strings"
 	"testing"
 	"testing/fstest"
@@ -154,4 +156,44 @@ func mkdirAll(p string) error { return os.MkdirAll(p, 0o755) }
 func exists(p string) bool {
 	_, err := os.Stat(p)
 	return err == nil
+}
+
+// TestCleanSSEOrdering guards the SIGSEGV panic: the log-streaming
+// goroutine must finish before the handler returns, and the "done" event
+// must be the last SSE frame (all log lines precede it).
+func TestCleanSSEOrdering(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("shell command based test")
+	}
+	last := []*scan.Target{{
+		ID: "cmd:lines", Tool: "os", ToolTitle: "系统", Title: "多条日志",
+		Risk: scan.RiskSafe, Method: scan.MethodCommand,
+		Cmd:       []string{"sh", "-c", "for i in 1 2 3 4 5 6 7 8; do echo \"log line $i\"; done"},
+		Available: true,
+	}}
+	s := newTestServer(t, last)
+
+	req := httptest.NewRequest(http.MethodPost, "/api/clean",
+		strings.NewReader(`{"ids":["cmd:lines"]}`))
+	rec := httptest.NewRecorder()
+	s.Handler().ServeHTTP(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("got %d: %s", rec.Code, rec.Body.String())
+	}
+
+	body := rec.Body.String()
+	for i := 1; i <= 8; i++ {
+		if !strings.Contains(body, fmt.Sprintf("log line %d", i)) {
+			t.Errorf("missing log line %d in stream:\n%s", i, body)
+		}
+	}
+	// every data frame; the last one must be the done event
+	frames := strings.Split(strings.TrimSpace(body), "\n\n")
+	lastFrame := frames[len(frames)-1]
+	if !strings.Contains(lastFrame, `"type":"done"`) {
+		t.Errorf("done event must be the final SSE frame, got:\n%s", lastFrame)
+	}
+	if strings.Contains(lastFrame, "log line") {
+		t.Errorf("log lines leaked after the done event:\n%s", lastFrame)
+	}
 }
