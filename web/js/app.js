@@ -40,6 +40,10 @@
             <span>{{ progressText }}<template v-if="scanning && progressTotal"> ({{ progressDone }}/{{ progressTotal }} 工具)</template></span>
             <span style="margin-left:auto;color:var(--text-dim)">首次扫描大目录可能需要几十秒</span>
           </div>
+          <div v-if="fromCache && !scanning && targets.length" class="scan-progress cached">
+            <span>⏱</span>
+            <span>显示缓存结果(缓存于 {{ cacheTime }}),点击"重新扫描"获取最新数据</span>
+          </div>
           <div v-if="scanError" class="scan-progress" style="background:var(--dangerous-weak);color:var(--dangerous)">
             ⚠️ {{ scanError }}
           </div>
@@ -236,6 +240,8 @@
         cleanSummaryText: '',
         theme: localStorage.getItem('odc-theme') || 'light',
         activeTool: '',
+        fromCache: false,
+        cacheTime: '',
       };
     },
 
@@ -282,7 +288,7 @@
           docker: '容器与模型', ollama: '容器与模型', kube: '容器与模型',
           infra: '研发/运维',
           ai: 'AI 编程工具',
-          workspace: '工作区',
+          workspace: '工作区', git: '工作区',
           editor: 'IDE 与编辑器',
           versions: '工具链版本',
           apps: '应用缓存', browser: '应用缓存',
@@ -291,7 +297,7 @@
         const icons = {
           docker: '🐳', go: '🐹', node: '🟢', java: '☕', python: '🐍', rust: '🦀',
           dotnet: '🟣', workspace: '📁', ollama: '🦙', ai: '🤖', editor: '🧑‍💻',
-          versions: '🔧', apps: '🧩', browser: '🌐', os: '⚙️', kube: '☸️', infra: '🛠️',
+          versions: '🔧', apps: '🧩', browser: '🌐', os: '⚙️', kube: '☸️', infra: '🛠️', git: '🌿',
         };
         const buckets = new Map();
         for (const g of this.grouped) {
@@ -369,6 +375,45 @@
         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
       },
 
+      // --- 扫描结果缓存 (sessionStorage) ---
+      // 避免高频点击扫描/刷新页面造成重复全盘计算;清理后失效。
+      cacheKey() {
+        return 'odc-scan-' + (this.version && this.version.version ? this.version.version : 'unknown');
+      },
+      persistScanCache() {
+        try {
+          const payload = {
+            version: this.version.version,
+            time: Date.now(),
+            targets: this.targets,
+            summary: this.summary,
+            selection: Object.assign({}, this.selection),
+          };
+          sessionStorage.setItem(this.cacheKey(), JSON.stringify(payload));
+        } catch (e) { /* quota exceeded etc. — 缓存失败不影响功能 */ }
+      },
+      restoreScanCache() {
+        try {
+          const raw = sessionStorage.getItem(this.cacheKey());
+          if (!raw) return;
+          const payload = JSON.parse(raw);
+          if (!payload || !payload.targets || !payload.targets.length) return;
+          if (payload.version !== this.version.version) return; // 版本变化,结构可能不兼容
+          this.targets = payload.targets;
+          this.summary = payload.summary || null;
+          if (payload.selection) {
+            for (const k of Object.keys(this.selection)) delete this.selection[k];
+            Object.assign(this.selection, payload.selection);
+          }
+          this.cacheTime = new Date(payload.time).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+          this.fromCache = true;
+        } catch (e) { /* 损坏的缓存直接忽略 */ }
+      },
+      invalidateScanCache() {
+        try { sessionStorage.removeItem(this.cacheKey()); } catch (e) { /* ignore */ }
+        this.fromCache = false;
+      },
+
       setupSpy() {
         if (typeof IntersectionObserver === 'undefined') return;
         if (this._spy) this._spy.disconnect();
@@ -437,7 +482,7 @@
               this.progressText = '正在扫描: ' + data.tool;
             } else if (data.message === 'done') {
               this.progressDone += 1;
-              this.progressText = '已完成 ' + this.progressDone + '/' + this.progressTotal;
+              // 计数统一由模板渲染 "(done/total 工具)",这里不再重复拼数字
             }
           } else if (data.type === 'target' && data.target) {
             this.targets.push(data.target);
@@ -449,6 +494,8 @@
             this.summary = data.summary;
             this.scanning = false;
             this.progressText = '';
+            this.fromCache = false;
+            this.persistScanCache();
             es.close();
           }
         };
@@ -537,6 +584,7 @@
         this.cleaning = false;
         this.cleanDone = true;
         this.loadDisks(); // refresh free space after cleaning
+        this.invalidateScanCache(); // 清理后结果已变化,缓存失效
       },
     },
 
@@ -548,7 +596,7 @@
 
     mounted() {
       this.applyTheme();
-      this.loadVersion();
+      this.loadVersion().then(() => this.restoreScanCache());
       this.loadDisks(); // disk overview is cheap; scanning stays manual
     },
   });

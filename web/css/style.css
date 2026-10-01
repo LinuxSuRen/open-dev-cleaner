@@ -129,6 +129,9 @@ body {
   background: var(--primary-weak); color: var(--primary);
   display: flex; align-items: center; gap: 12px; font-size: 13px;
 }
+.scan-progress.cached {
+  background: var(--bg-inset); color: var(--text-dim);
+}
 .spinner {
   width: 16px; height: 16px; border-radius: 50%;
   border: 2px solid var(--primary); border-top-color: transparent;
