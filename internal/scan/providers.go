@@ -37,6 +37,7 @@ func DefaultProviders() []Provider {
 	return []Provider{
 		&DockerProvider{},
 		&KubeProvider{},
+		&InfraProvider{},
 		&GoProvider{},
 		&NodeProvider{},
 		&JavaProvider{},
@@ -44,6 +45,7 @@ func DefaultProviders() []Provider {
 		&RustProvider{},
 		&DotNetProvider{},
 		&WorkspaceProvider{},
+		&GitProvider{},
 		&OllamaProvider{},
 		&AIProvider{},
 		&VersionsProvider{},

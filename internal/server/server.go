@@ -99,8 +99,10 @@ func localIP() (string, error) {
 // --- SSE helpers ---
 
 type sseWriter struct {
+	mu      sync.Mutex
 	w       http.ResponseWriter
 	flusher http.Flusher
+	closed  bool
 }
 
 func startSSE(w http.ResponseWriter) (*sseWriter, bool) {
@@ -117,10 +119,27 @@ func startSSE(w http.ResponseWriter) (*sseWriter, bool) {
 	return &sseWriter{w: w, flusher: f}, true
 }
 
-func (s *sseWriter) send(v any) {
+func (s *sseWriter) send(v any) bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.closed {
+		return false
+	}
 	b, _ := json.Marshal(v)
-	fmt.Fprintf(s.w, "data: %s\n\n", b)
+	if _, err := fmt.Fprintf(s.w, "data: %s\n\n", b); err != nil {
+		return false
+	}
 	s.flusher.Flush()
+	return true
+}
+
+// close marks the stream as finished: later sends become no-ops instead
+// of touching a ResponseWriter the net/http machinery already released
+// (writing after the handler returns caused SIGSEGV panics).
+func (s *sseWriter) close() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.closed = true
 }
 
 // --- handlers ---
@@ -229,15 +248,22 @@ func (s *Server) handleClean(w http.ResponseWriter, r *http.Request) {
 		sw.send(scan.Event{Type: "log", Message: "以下目标未在最近扫描中找到,已忽略: " + strings.Join(unknown, ", ") + "(请重新扫描)"})
 	}
 
-	// Stream cleaner output through a pipe.
+	// Stream cleaner output through a pipe. Ordering guarantee: the
+	// reader goroutine drains every log line (until pipe EOF) BEFORE the
+	// handler sends the final "done" event and returns — previously the
+	// reader could still Flush() a ResponseWriter the net/http server had
+	// already released after handler return, crashing the process.
 	pr, pw := io.Pipe()
 	done := make(chan []scan.CleanResult, 1)
+	drained := make(chan struct{})
 	go func() {
 		results := s.runClean(r.Context(), targets, req.DryRun, pw)
 		_ = pw.Close()
 		done <- results
 	}()
 	go func() {
+		defer close(drained)
+		defer pr.Close()
 		buf := make([]byte, 4096)
 		var line []byte
 		for {
@@ -263,6 +289,7 @@ func (s *Server) handleClean(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	results := <-done
+	<-drained // all log events are on the wire before the final event
 	var freed int64
 	fails := 0
 	for _, res := range results {
@@ -273,6 +300,7 @@ func (s *Server) handleClean(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	sw.send(scan.Event{Type: "done", Message: fmt.Sprintf("清理完成: %d 项,释放约 %s,%d 项失败", len(results), scan.FormatSize(freed), fails), Summary: &scan.Summary{TotalSize: freed}})
+	sw.close()
 }
 
 func indexByte(b []byte, c byte) int {
@@ -300,12 +328,12 @@ func (s *Server) runClean(ctx context.Context, targets []*scan.Target, dry bool,
 // --- static files ---
 
 var contentTypeByExt = map[string]string{
-	".html": "text/html; charset=utf-8",
-	".js":   "text/javascript; charset=utf-8",
-	".css":  "text/css; charset=utf-8",
-	".svg":  "image/svg+xml",
-	".png":  "image/png",
-	".ico":  "image/x-icon",
+	".html":  "text/html; charset=utf-8",
+	".js":    "text/javascript; charset=utf-8",
+	".css":   "text/css; charset=utf-8",
+	".svg":   "image/svg+xml",
+	".png":   "image/png",
+	".ico":   "image/x-icon",
 	".woff2": "font/woff2",
 }
 

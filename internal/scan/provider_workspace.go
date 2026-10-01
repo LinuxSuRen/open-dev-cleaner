@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/fs"
 	"path/filepath"
+	"sort"
 	"strings"
 )
 
@@ -93,6 +94,8 @@ func (p *WorkspaceProvider) Scan(ctx context.Context, env *Env, emit func(*Targe
 		if len(children) == 0 {
 			continue
 		}
+		// biggest artifacts first
+		sort.SliceStable(children, func(i, j int) bool { return children[i].Size > children[j].Size })
 		var total int64
 		maxRisk := RiskSafe
 		for _, c := range children {

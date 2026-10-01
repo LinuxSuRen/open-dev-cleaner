@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strings"
 )
 
@@ -134,6 +135,20 @@ func (cl *Cleaner) cleanCommand(ctx context.Context, t *Target, dry bool) CleanR
 		cl.log("%s", res.Message)
 		return res
 	}
+
+	// ollama commands need a running server; when it is down, start it
+	// temporarily (same as during scanning) and stop it afterwards.
+	var stopDaemon func()
+	if t.Cmd[0] == "ollama" && cl.Env != nil && !cl.Env.NoExternal && !ollamaReady() {
+		started, stop, err := startOllamaServer(ctx, cl.Env)
+		if started {
+			stopDaemon = stop
+			cl.log("[服务] Ollama 未运行,已临时启动,执行完成后将自动关闭")
+		} else {
+			cl.log("[警告] 无法临时启动 Ollama 服务: %v", err)
+		}
+	}
+
 	cl.log("[执行] %s", display)
 
 	cmd := exec.CommandContext(ctx, t.Cmd[0], t.Cmd[1:]...)
@@ -141,10 +156,14 @@ func (cl *Cleaner) cleanCommand(ctx context.Context, t *Target, dry bool) CleanR
 	cmd.Stdout = &buf
 	cmd.Stderr = &buf
 	err := cmd.Run()
+	if stopDaemon != nil {
+		stopDaemon()
+		cl.log("[服务] 临时 Ollama 服务已关闭")
+	}
 	sc := bufio.NewScanner(&buf)
 	sc.Buffer(make([]byte, 64*1024), 1024*1024)
 	for sc.Scan() {
-		line := strings.TrimSpace(sc.Text())
+		line := stripANSI(strings.TrimSpace(sc.Text()))
 		if line != "" {
 			cl.log("  %s", line)
 		}
@@ -158,6 +177,15 @@ func (cl *Cleaner) cleanCommand(ctx context.Context, t *Target, dry bool) CleanR
 	res.OK = true
 	res.Message = fmt.Sprintf("命令执行成功: %s", display)
 	return res
+}
+
+// stripANSI removes terminal control sequences (colors, cursor moves)
+// that external CLIs (ollama, docker...) print even when not attached to
+// a TTY, plus carriage returns from progress lines.
+var ansiRe = regexp.MustCompile(`\x1b\[[0-9;?]*[a-zA-Z]|\x1b\][^\x07]*\x07|\r`)
+
+func stripANSI(s string) string {
+	return strings.TrimSpace(ansiRe.ReplaceAllString(s, ""))
 }
 
 // validateRemovable enforces the safety net for filesystem deletion: the
