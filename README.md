@@ -76,6 +76,7 @@ open-dev-cleaner clean --ids go:build-cache,docker:dangling --dry-run
 | **AI 编程工具** | OpenCode、DeepSeek Harness (dsh)、Claude Code、Codex、Gemini CLI、Aider 的日志/快照/会话缓存,以及"删除全部本地数据" | 安全 → 高风险 |
 | **版本管理器** | nvm / sdkman / pyenv / ~/sdk 的各版本工具链,逐个列出可单独删除,标注当前版本与"长期未使用"提示;含 nvm、sdkman 下载缓存 | 安全 / 高风险 |
 | **工作区** | `node_modules`、`target`、`dist`、`build`、`.next`、`__pycache__`、`venv`、`.pytest_cache` 等 | 安全 → 高风险 |
+| **Git** | 按仓库分析:垃圾对象(`git gc --prune=now`)、失效 worktree 记录(`git worktree prune`)、独立 worktree 检出目录、已合并分支(`branch -d`)、超 180 天未合并分支(`branch -D`)、Git LFS 旧对象(`git lfs prune`);主/开发分支自动保护 | 安全 → 高风险 |
 | **编辑器** | VS Code / Cursor / Trae 的 Cache/CachedData/日志/扩展、vscode-server | 安全 / 谨慎 |
 | **JetBrains 系 IDE** | IntelliJ / PyCharm / GoLand / WebStorm / Rider / Fleet 按 IDE 细分(长期未用的单独标注)、IDE 日志、**Android Studio** 缓存、Android 构建缓存 | 安全 / 谨慎 |
 | **Eclipse** | p2 下载缓存、p2 共享组件池(整体删除)、用户数据 | 安全 → 高风险 |

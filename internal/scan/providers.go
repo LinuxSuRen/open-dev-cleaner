@@ -45,6 +45,7 @@ func DefaultProviders() []Provider {
 		&RustProvider{},
 		&DotNetProvider{},
 		&WorkspaceProvider{},
+		&GitProvider{},
 		&OllamaProvider{},
 		&AIProvider{},
 		&VersionsProvider{},
