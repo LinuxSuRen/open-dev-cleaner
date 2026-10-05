@@ -66,6 +66,12 @@ var artifactRules = map[string]artifactRule{
 	".gradle": {
 		"构建缓存", RiskSafe, "项目级 Gradle 缓存,删除后自动重建",
 	},
+	"Pods": {
+		"iOS 依赖", RiskHigh, "CocoaPods 依赖目录,删除后执行 pod install 恢复(需要网络)",
+	},
+	".build": {
+		"构建产物", RiskCaution, "Swift Package Manager 构建产物,删除后 swift build 重新构建",
+	},
 	"venv": {
 		"虚拟环境", RiskHigh, "Python 虚拟环境,删除后需要重新创建并安装依赖",
 	},

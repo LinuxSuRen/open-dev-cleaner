@@ -74,7 +74,8 @@ open-dev-cleaner clean --ids go:build-cache,docker:dangling --dry-run
 | **Ollama** | 本地大模型(逐个列出,可单独删除);服务未运行时自动临时启动 `ollama serve` 完成扫描后关闭(设置 `OLLAMA_HOST` 时不自动启动) | 高风险 |
 | **AI 编程工具** | OpenCode、DeepSeek Harness (dsh)、Claude Code、Codex、Gemini CLI、Aider 的日志/快照/会话缓存,以及"删除全部本地数据" | 安全 → 高风险 |
 | **版本管理器** | nvm / sdkman / pyenv / ~/sdk 的各版本工具链,逐个列出可单独删除,标注当前版本与"长期未使用"提示;含 nvm、sdkman 下载缓存 | 安全 / 高风险 |
-| **工作区** | `node_modules`、`target`、`dist`、`build`、`.next`、`__pycache__`、`venv`、`.pytest_cache` 等 | 安全 → 高风险 |
+| **工作区** | `node_modules`、`target`、`dist`、`build`、`.next`、`__pycache__`、`venv`、`Pods`、`.build`、`.pytest_cache` 等 | 安全 → 高风险 |
+| **移动开发** | **鸿蒙**:DevEco Studio 缓存(按版本)、DevEco SDK、OpenHarmony 旧版 SDK、hvigor 构建缓存、ohpm 包缓存;**安卓**:SDK 系统镜像(按 API)/NDK(按版本)/platforms/build-tools、AVD 模拟器设备(按个,高风险)、工具缓存;**iOS**:CocoaPods 缓存与 Specs 镜像、SwiftPM 缓存、Carthage、Xcode 打包归档(高风险)、失效模拟器清理(simctl) | 安全 → 高风险 |
 | **编辑器** | VS Code / Cursor / Trae 的 Cache/CachedData/日志/扩展、vscode-server | 安全 / 谨慎 |
 | **JetBrains 系 IDE** | IntelliJ / PyCharm / GoLand / WebStorm / Rider / Fleet 按 IDE 细分(长期未用的单独标注)、IDE 日志、**Android Studio** 缓存、Android 构建缓存 | 安全 / 谨慎 |
 | **Eclipse** | p2 下载缓存、p2 共享组件池(整体删除)、用户数据 | 安全 → 高风险 |
