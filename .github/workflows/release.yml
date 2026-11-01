@@ -48,9 +48,13 @@ jobs:
             GOOS="${target%%/*}"
             GOARCH="${target##*/}"
             NAME="open-dev-cleaner_${GOOS}_${GOARCH}"
+            BIN="open-dev-cleaner"
+            if [ "${GOOS}" = "windows" ]; then
+              BIN="open-dev-cleaner.exe"
+            fi
             echo "==> building ${NAME}"
             CGO_ENABLED=0 GOOS="${GOOS}" GOARCH="${GOARCH}" \
-              go build -trimpath -ldflags "${LDFLAGS}" -o "dist/${NAME}/open-dev-cleaner" .
+              go build -trimpath -ldflags "${LDFLAGS}" -o "dist/${NAME}/${BIN}" .
             cp LICENSE README.md "dist/${NAME}/"
             if [ "${GOOS}" = "windows" ]; then
               (cd "dist/${NAME}" && zip -r "../${NAME}.zip" .)
